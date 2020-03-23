@@ -5,6 +5,6 @@ Quando mancano 5 minuti all'inizio di una lezione invia un messaggio di promemor
 
 Risponde ai comandi ***lezioni oggi*** e ***lezioni domani***, inviando rispettivamente l'elenco delle lezioni del giorno corrente e del giorno successivo.
 
-Il bot è ancora in fase di sviluppo, pertanto potrebbe non funzionare correttamente. L'immagine del gruppo attualmente è semplicemente composta dalla rappresentazione JSON delle lezioni della settimana.
+Il bot è ancora in fase di sviluppo e testing, pertanto potrebbe non funzionare correttamente.
 
 Oltre alle dipendenze contenute in *requirements.txt* è necessario anche [**Simple-Yet-Hackable-WhatsApp-api**](https://github.com/VISWESWARAN1998/Simple-Yet-Hackable-WhatsApp-api) e le relative dipendenze.

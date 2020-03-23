@@ -5,6 +5,7 @@ from dateutil.parser import parse
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
+from json_to_image import json_to_image
 
 # url del calendario: lo trovi nele impostazioni del calendario in Google Calendar, sotto la voce "Indirizzo segreto in formato iCal"
 CALENDAR_URL = ""
@@ -41,18 +42,6 @@ def fixDateTime(date):
     else:
         date = parse(date)
     return date.strftime("%Y-%m-%d %H:%M:%S")
-
-def lezioniToImg(lezioni):
-    lezioni = json.dumps(lezioni)
-    text = json.dumps(lezioni)
-    image = Image.new("RGB", (1000, 1000), "#fff")
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("font.ttf", 22, encoding='unic')
-    margin = offset = 5
-    for line in textwrap.wrap(text, width=90):
-        draw.text((margin, offset), line, font=font, fill="#000")
-        offset += font.getsize(line)[1]
-    image.save("image.jpg")
 
 def getDates():
     today = date.today()
@@ -137,7 +126,7 @@ def changePicture():
         event.wait()
         lock.acquire()
         time.sleep(1)
-        whatsapp.set_group_picture(CHAT_NAME, os.path.join(os.getcwd(), "image.jpg"))
+        whatsapp.set_group_picture(CHAT_NAME, os.path.join(os.getcwd(), "image.png"))
         time.sleep(1)
         lock.release()
     except:
@@ -159,7 +148,7 @@ def run():
         f = open("orario.old", "w")
         f.write(json.dumps(lezioni))
         f.close()
-        lezioniToImg(lezioni)
+        json_to_image(lezioni)
         changePicture()
     today = date.today()
     todayy = (today.year, today.month, today.day)
