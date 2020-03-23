@@ -84,6 +84,17 @@ def lezioniDomani():
         messaggio = messaggio + "*" + datetime.strptime(lezione['inizio'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + " - " + datetime.strptime(lezione['fine'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + "* " + lezione['materia'] + "\n"
     return messaggio
 
+def lezioniDopoDomani():
+    messaggio = "*LEZIONI DI DOPODOMANI*\n"
+    today = date.today() + timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
+    lezioni = lezioniRange(today, tomorrow)
+    if len(lezioni) == 0:
+        return "Dopodomani non ci saranno lezioni"
+    for lezione in lezioni:
+        messaggio = messaggio + "*" + datetime.strptime(lezione['inizio'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + " - " + datetime.strptime(lezione['fine'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + "* " + lezione['materia'] + "\n"
+    return messaggio
+
 def handleMessage():
     global whatsapp
     oldMessage = ""
@@ -100,6 +111,8 @@ def handleMessage():
                     sendMessage(lezioniOggi(), False)
                 elif message.lower() == "lezioni domani":
                     sendMessage(lezioniDomani(), False)
+                elif message.lower() == "lezioni dopodomani":
+                    sendMessage(lezioniDopoDomani(), False)
                 oldMessage = messages[0]
         except:
             pass
