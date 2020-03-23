@@ -1,7 +1,6 @@
 import requests, re, icalendar, recurring_ical_events, json, textwrap, PIL, threading, time, os, sys
 from whatsapp import WhatsApp
 from datetime import datetime, timedelta, date
-from text2png import text2png
 from dateutil.parser import parse
 from PIL import ImageFont
 from PIL import Image
