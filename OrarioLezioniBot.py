@@ -154,7 +154,7 @@ def run():
     lezioni = lezioniRange(todayy, tomorrow)
     for lezione in lezioni:
         lezioneStart = datetime.strptime(lezione['inizio'], '%Y-%m-%d %H:%M:%S')
-        now = datetime.now()  + timedelta(hours=1)
+        now = datetime.now()
         if (lezioneStart > now and (lezioneStart-now).total_seconds() < (60*5) and lastMateria != lezione['materia']):
             lastMateria = lezione['materia']
             sendMessage("*PROSSIMA LEZIONE:*\n" + lezione['materia'] + "\n(" + datetime.strptime(lezione['inizio'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + " - " + datetime.strptime(lezione['fine'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + ")\n\n" + lezione['url'])
@@ -162,7 +162,6 @@ def run():
 if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
-os.environ['TZ'] = 'Europe/London'
 lastMateria = ''
 lock = threading.Lock()
 event = threading.Event()
