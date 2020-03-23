@@ -139,7 +139,6 @@ def run():
         f = open("orario.old", "r")
     except:
         f = open("orario.old", "w")
-        f.close()
     if (f.read() != json.dumps(lezioni)):
         f.close()
         f = open("orario.old", "w")
