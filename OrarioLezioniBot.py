@@ -86,7 +86,7 @@ def lezioniDomani():
 
 def lezioniDopoDomani():
     messaggio = "*LEZIONI DI DOPODOMANI*\n"
-    today = date.today() + timedelta(days=1)
+    today = date.today() + timedelta(days=2)
     tomorrow = today + timedelta(days=1)
     lezioni = lezioniRange(today, tomorrow)
     if len(lezioni) == 0:
