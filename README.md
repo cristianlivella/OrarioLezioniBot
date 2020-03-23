@@ -1,4 +1,4 @@
-# OrarioLezioniBot
+# OrarioLezioniBot - python3
 Questo bot recupera automaticamente da un *iCal* di *Google Calendar* l'orario delle lezioni della settimana, genera un immagine e la imposta come immagine del gruppo WhatsApp.
 
 Quando mancano 5 minuti all'inizio di una lezione invia un messaggio di promemoria, con il link della call (di Google Meet, oppure qualsiasi altro link trovato nella descrizione dell'evento), se presente.

@@ -1,4 +1,4 @@
-import requests, re, icalendar, recurring_ical_events, json, textwrap, PIL, threading, time, os
+import requests, re, icalendar, recurring_ical_events, json, textwrap, PIL, threading, time, os, sys
 from whatsapp import WhatsApp
 from datetime import datetime, timedelta, date
 from text2png import text2png
@@ -10,7 +10,7 @@ from PIL import ImageDraw
 # url del calendario: lo trovi nele impostazioni del calendario in Google Calendar, sotto la voce "Indirizzo segreto in formato iCal"
 CALENDAR_URL = ""
 # nome della gruppo WhatsApp
-CHAT_NAME = "5ID"
+CHAT_NAME = ""
 
 def lezioniRange(start, end):
     lezioni = []
@@ -154,6 +154,9 @@ def run():
         if (lezioneStart > now and (lezioneStart-now).total_seconds() < (60*5) and lastMateria != lezione['materia']):
             lastMateria = lezione['materia']
             sendMessage("*PROSSIMA LEZIONE:*\n" + lezione['materia'] + "\n(" + datetime.strptime(lezione['inizio'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + " - " + datetime.strptime(lezione['fine'], '%Y-%m-%d %H:%M:%S').strftime("%H:%M") + ")\n\n" + lezione['url'])
+
+if sys.version_info[0] < 3:
+    raise Exception("Python 3 or a more recent version is required.")
 
 os.environ['TZ'] = 'Europe/London'
 lastMateria = ''
