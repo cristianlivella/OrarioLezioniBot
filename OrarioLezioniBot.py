@@ -103,7 +103,7 @@ def handleMessage():
                 elif message.lower() == "lezioni dopodomani" or message.lower() == "orario dopodomani":
                     sendMessage(lezioniDopoDomani(), False)
                 elif message.lower() == "cambia immagine" or message.lower() == "aggiorna immagine":
-                    changePicture(true)
+                    changePicture(False)
                 oldMessage = messages[0]
         except:
             pass
