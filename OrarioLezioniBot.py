@@ -96,12 +96,14 @@ def handleMessage():
         try:
             if messages[0] != oldMessage:
                 message = messages[0]
-                if message.lower() == "lezioni oggi":
+                if message.lower() == "lezioni oggi" or message.lower() == "orario oggi":
                     sendMessage(lezioniOggi(), False)
-                elif message.lower() == "lezioni domani":
+                elif message.lower() == "lezioni domani" or message.lower() == "orario domani":
                     sendMessage(lezioniDomani(), False)
-                elif message.lower() == "lezioni dopodomani":
+                elif message.lower() == "lezioni dopodomani" or message.lower() == "orario dopodomani":
                     sendMessage(lezioniDopoDomani(), False)
+                elif message.lower() == "cambia immagine" or message.lower() == "aggiorna immagine":
+                    changePicture(true)
                 oldMessage = messages[0]
         except:
             pass
@@ -121,16 +123,19 @@ def sendMessage(message, lockk=True):
         if lockk:
             lock.release()
 
-def changePicture():
+def changePicture(lockk=True):
     try:
-        event.wait()
-        lock.acquire()
+        if lockk:
+            event.wait()
+            lock.acquire()
         time.sleep(1)
         whatsapp.set_group_picture(CHAT_NAME, os.path.join(os.getcwd(), "image.png"))
         time.sleep(1)
-        lock.release()
+        if lockk:
+            lock.release()
     except:
-        lock.release()
+        if lockk:
+            lock.release()
 
 def run():
     threading.Timer(120.0, run).start()
