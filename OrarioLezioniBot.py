@@ -103,7 +103,7 @@ def handleMessage():
                 elif message.lower() == "lezioni dopodomani" or message.lower() == "orario dopodomani":
                     sendMessage(lezioniDopoDomani(), False)
                 elif message.lower() == "cambia immagine" or message.lower() == "aggiorna immagine":
-                    json_to_image(lezioni)
+                    json_to_image(lezioniCache)
                     changePicture(False)
                 oldMessage = messages[0]
         except:
@@ -141,9 +141,10 @@ def changePicture(lockk=True):
 def run():
     threading.Timer(120.0, run).start()
     global lastMateria
-    global lezioni
+    global lezioniCache
     dates = getDates()
     lezioni = lezioniRange(dates[0], dates[1])
+    lezioniCache = lezioni
     try:
         f = open("orario.old", "r")
     except:
@@ -172,7 +173,7 @@ if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
 lastMateria = ''
-lezioni = []
+lezioniCache = []
 lock = threading.Lock()
 event = threading.Event()
 whatsapp = WhatsApp(100, session="mysession")
