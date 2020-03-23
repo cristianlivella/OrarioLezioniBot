@@ -135,7 +135,11 @@ def run():
     global lastMateria
     dates = getDates()
     lezioni = lezioniRange(dates[0], dates[1])
-    f = open("orario.old", "r")
+    try:
+        f = open("orario.old", "r")
+    except:
+        f = open("orario.old", "w")
+        f.close()
     if (f.read() != json.dumps(lezioni)):
         f.close()
         f = open("orario.old", "w")
