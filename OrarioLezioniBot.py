@@ -5,6 +5,7 @@ from dateutil.parser import parse
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
+from json_to_image import json_to_image
 
 # url del calendario: lo trovi nele impostazioni del calendario in Google Calendar, sotto la voce "Indirizzo segreto in formato iCal"
 CALENDAR_URL = ""
@@ -41,18 +42,6 @@ def fixDateTime(date):
     else:
         date = parse(date)
     return date.strftime("%Y-%m-%d %H:%M:%S")
-
-def lezioniToImg(lezioni):
-    lezioni = json.dumps(lezioni)
-    text = json.dumps(lezioni)
-    image = Image.new("RGB", (1000, 1000), "#fff")
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("font.ttf", 22, encoding='unic')
-    margin = offset = 5
-    for line in textwrap.wrap(text, width=90):
-        draw.text((margin, offset), line, font=font, fill="#000")
-        offset += font.getsize(line)[1]
-    image.save("image.jpg")
 
 def getDates():
     today = date.today()
@@ -107,12 +96,15 @@ def handleMessage():
         try:
             if messages[0] != oldMessage:
                 message = messages[0]
-                if message.lower() == "lezioni oggi":
+                if message.lower() == "lezioni oggi" or message.lower() == "orario oggi":
                     sendMessage(lezioniOggi(), False)
-                elif message.lower() == "lezioni domani":
+                elif message.lower() == "lezioni domani" or message.lower() == "orario domani":
                     sendMessage(lezioniDomani(), False)
-                elif message.lower() == "lezioni dopodomani":
+                elif message.lower() == "lezioni dopodomani" or message.lower() == "orario dopodomani":
                     sendMessage(lezioniDopoDomani(), False)
+                elif message.lower() == "cambia immagine" or message.lower() == "aggiorna immagine":
+                    json_to_image(lezioniCache)
+                    changePicture(False)
                 oldMessage = messages[0]
         except:
             pass
@@ -132,22 +124,27 @@ def sendMessage(message, lockk=True):
         if lockk:
             lock.release()
 
-def changePicture():
+def changePicture(lockk=True):
     try:
-        event.wait()
-        lock.acquire()
+        if lockk:
+            event.wait()
+            lock.acquire()
         time.sleep(1)
-        whatsapp.set_group_picture(CHAT_NAME, os.path.join(os.getcwd(), "image.jpg"))
+        whatsapp.set_group_picture(CHAT_NAME, os.path.join(os.getcwd(), "image.png"))
         time.sleep(1)
-        lock.release()
+        if lockk:
+            lock.release()
     except:
-        lock.release()
+        if lockk:
+            lock.release()
 
 def run():
     threading.Timer(120.0, run).start()
     global lastMateria
+    global lezioniCache
     dates = getDates()
     lezioni = lezioniRange(dates[0], dates[1])
+    lezioniCache = lezioni
     try:
         f = open("orario.old", "r")
     except:
@@ -159,7 +156,7 @@ def run():
         f = open("orario.old", "w")
         f.write(json.dumps(lezioni))
         f.close()
-        lezioniToImg(lezioni)
+        json_to_image(lezioni)
         changePicture()
     today = date.today()
     todayy = (today.year, today.month, today.day)
@@ -176,6 +173,7 @@ if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
 
 lastMateria = ''
+lezioniCache = []
 lock = threading.Lock()
 event = threading.Event()
 whatsapp = WhatsApp(100, session="mysession")
