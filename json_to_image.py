@@ -99,7 +99,7 @@ def json_to_image(data):
 
     #Draw days
     r = getDaysRange(data)
-    d_earliest, d_latest, d_duration = r[0].day, r[len(r) - 1].day, len(r)
+    earliest, latest, d_duration = r[0], r[len(r) - 1], len(r)
     d_spacing = (X - D_SPACING['right'] - D_SPACING['left']) / d_duration
     font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 30)
     for i in range(0, d_duration):
@@ -114,7 +114,7 @@ def json_to_image(data):
         color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
         start = datetime.datetime.strptime(i['inizio'], date_scheme)
         finish = datetime.datetime.strptime(i['fine'], date_scheme)
-        event_posX = start.day - d_earliest
+        event_posX = (start - earliest).days
         event_posY = start.hour - h_earliest[0]
         event_end_posY = finish.hour - h_earliest[0]
         shape = [
