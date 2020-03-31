@@ -1,6 +1,7 @@
 import json
 import random
 import datetime
+from datetime import timedelta
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
 import rounded_rectangle
@@ -56,16 +57,21 @@ def json_to_image(data):
         return [earliest.hour, earliest.minute], [latest.hour, latest.minute], int(duration)
 
     def getDaysRange(json):
-        earliest = datetime.datetime.strptime(json[0]['inizio'], date_scheme).day
-        latest = datetime.datetime.strptime(json[len(json) - 1]['inizio'], date_scheme).day
+        r = []
+        earliest = datetime.datetime.strptime(json[0]['inizio'], date_scheme)
+        latest = datetime.datetime.strptime(json[len(json) - 1]['inizio'], date_scheme)
+
         for i in json:
-            day = datetime.datetime.strptime(i['inizio'], date_scheme).day
-            if day < earliest:
-                earliest = day
-            if day > latest:
-                latest = day
-        duration = latest - earliest + 1
-        return earliest, latest, duration
+            c = datetime.datetime.strptime(i['inizio'], date_scheme)
+            if c < earliest:
+                earliest = c
+            if c > latest:
+                latest = c
+
+        duration = latest - earliest
+        for i in range(0, duration.days + 1):
+            r.append(earliest + timedelta(days = i))
+        return r
 
     def getOptimalTextWidth(text, font, Y):
         i = 1
@@ -85,24 +91,25 @@ def json_to_image(data):
     #Draw hours
     h_earliest, h_latest, h_duration = getHoursRange(data)
     h_spacing = (Y - H_SPACING['top'] - H_SPACING['bottom']) / h_duration
-    font = ImageFont.truetype("Baloo2-Bold.ttf", 20)
+    font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 20)
     for i in range(0, h_duration):
         d.text((H_SPACING['left'], i * h_spacing + H_SPACING['top']), str(h_earliest[0] + i) + ':00', fill=(230, 230, 230), font=font)
         shape = [(H_SPACING['left'], i * h_spacing + H_SPACING['top'] + H_LINE_OFFSET), (X - H_SPACING['right'], i * h_spacing + H_SPACING['top'] + H_LINE_OFFSET)]
         d.line(shape, fill =(30, 30, 30), width = LINE_WIDTH)
 
     #Draw days
-    d_earliest, d_latest, d_duration = getDaysRange(data)
+    r = getDaysRange(data)
+    d_earliest, d_latest, d_duration = r[0].day, r[len(r) - 1].day, len(r)
     d_spacing = (X - D_SPACING['right'] - D_SPACING['left']) / d_duration
-    font = ImageFont.truetype("Baloo2-Bold.ttf", 30)
+    font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 30)
     for i in range(0, d_duration):
-        d.text((i * d_spacing + D_SPACING['left'], D_SPACING['top']), str(d_earliest + i), fill=(230, 230, 230), font=font)
+        d.text((i * d_spacing + D_SPACING['left'], D_SPACING['top']), str(r[i].day), fill=(230, 230, 230), font=font)
     for i in range(0, d_duration + 1):
         shape = [(i * d_spacing + D_SPACING['left'] + D_LINE_OFFSET, D_SPACING['top']), (i * d_spacing + D_SPACING['left'] + D_LINE_OFFSET, Y - D_SPACING['bottom'])]
         d.line(shape, fill =(30, 30, 30), width = LINE_WIDTH)
 
     #Draw events
-    font = ImageFont.truetype("Lato-Bold.ttf", 20)
+    font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
     for i in data:
         color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
         start = datetime.datetime.strptime(i['inizio'], date_scheme)
