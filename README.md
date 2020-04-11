@@ -1,10 +1,11 @@
 # OrarioLezioniBot
-Questo bot recupera automaticamente da un *iCal* di *Google Calendar* l'orario delle lezioni della settimana, genera un immagine e la imposta come immagine del gruppo WhatsApp.
+## LessonsTimetableBot
+This Whatsapp bot automatically gets the lessons timetable from a *Google Calendar iCal*, generates an image and sets it as a Whatsapp group picture.
 
-Quando mancano 5 minuti all'inizio di una lezione invia un messaggio di promemoria, con il link della call (di Google Meet, oppure qualsiasi altro link trovato nella descrizione dell'evento), se presente.
+When there are 5 minutes left to the beginning of a lesson, it sends a reminder message with the link of the call (from Google Meet, or any other link found in the description of the event).
 
-Risponde ai comandi ***lezioni oggi*** e ***lezioni domani***, inviando rispettivamente l'elenco delle lezioni del giorno corrente e del giorno successivo.
+It replies at the commands ***lezioni oggi*** (today's lessons), ***lezioni domani*** (tomorrow's lessons) and ***lezioni dopodomani*** (lessons of the day after tomorrow), by sending the list of the lessons of the chosen day.
 
-Il bot è ancora in fase di sviluppo e testing, pertanto potrebbe non funzionare correttamente.
+The bot is still under development and testing, so it may not work properly.
 
-Oltre alle dipendenze contenute in *requirements.txt* è necessario anche [**Simple-Yet-Hackable-WhatsApp-api**](https://github.com/VISWESWARAN1998/Simple-Yet-Hackable-WhatsApp-api) e le relative dipendenze.
+In addition to the dependencies contained in *requirements.txt*, [**Simple-Yet-Hackable-WhatsApp-api**](https://github.com/VISWESWARAN1998/Simple-Yet-Hackable-WhatsApp-api) and its dependencies are also required.
