@@ -37,6 +37,7 @@ D_SPACING = {
     'left': 110
 }
 H_SPACING = {
+    'top-original': 80, #same as top
     'top': 80,
     'bottom': 30,
     'right': 30,
@@ -45,6 +46,7 @@ H_SPACING = {
 
 EVENT_PADDING = 5
 TEXT_PADDING = 10
+MULTIPLE_DAY_EVENTS_HEIGHT = 30
 
 LINE_WIDTH = 3
 CIRCLE_DIAMETER = 60
@@ -54,6 +56,9 @@ WEEK_DAY = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 date_scheme = '%Y-%m-%d %H:%M:%S'
 
 def json_to_image(data):
+    #Draw backgroud
+    img = Image.new('RGB', (X, Y), color = (20, 20, 20))
+    d = ImageDraw.Draw(img)
 
     COLORS = {}
 
@@ -105,9 +110,25 @@ def json_to_image(data):
             i += 1
         return i
 
-    #Draw backgroud
-    img = Image.new('RGB', (X, Y), color = (20, 20, 20))
-    d = ImageDraw.Draw(img)
+    def filterMultipleDayEvents(json):
+        multiple_day_events = []
+        font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
+        for i in json:
+            event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
+            event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+            if event_start.date() != event_end.date():
+                #w, h = d.textsize(i['materia'], font=font)
+                H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
+                multiple_day_events.append(i)
+
+        for i in multiple_day_events:
+            for x in json:
+                if i == x:
+                    json.remove(x)
+
+        return multiple_day_events
+
+    multiple_day_events = filterMultipleDayEvents(data)
 
     #Draw hours
     h_earliest, h_latest, h_duration = getHoursRange(data)
@@ -155,8 +176,43 @@ def json_to_image(data):
     for i in range(0, d_duration + 1):
         shape = [(i * d_spacing + D_SPACING['left'], D_SPACING['top']), (i * d_spacing + D_SPACING['left'], Y - D_SPACING['bottom'])]
         d.line(shape, fill =(30, 30, 30), width = LINE_WIDTH)
-    for i in r:
-        print(WEEK_DAY[i.weekday()])
+
+    #Draw multiple day events
+    if multiple_day_events:
+        count = 0
+        for i in multiple_day_events:
+            event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
+            event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+            if event_end <= r[len(r) - 1] or event_start >= r[0]:
+                text = i['materia']
+                font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
+                w, h = d.textsize(text, font=font)
+                if (event_start.date() - earliest.date()).days < 0:
+                    event_start_posX = 0
+                else:
+                    event_start_posX = (event_start.date() - earliest.date()).days
+
+                if (event_end.date() - earliest.date()).days > len(r):
+                    event_end_posX = len(r)
+                else:
+                    event_end_posX = (event_end.date() - earliest.date()).days
+                shape = [
+                    (
+                        event_start_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
+                        H_SPACING['top-original'] + MULTIPLE_DAY_EVENTS_HEIGHT * count
+                    ),
+                    (
+                        event_end_posX * d_spacing + D_SPACING['left'] - EVENT_PADDING,
+                        H_SPACING['top-original'] + MULTIPLE_DAY_EVENTS_HEIGHT * (count + 1) - EVENT_PADDING
+                    )
+                ]
+                d.rounded_rectangle(shape, 10, fill = COLORS[i['materia']])
+                position = (
+                    event_start_posX * d_spacing + D_SPACING['left'] + TEXT_PADDING + EVENT_PADDING,
+                    H_SPACING['top-original'] + MULTIPLE_DAY_EVENTS_HEIGHT * count
+                )
+                d.text(position, text, fill=(250, 250, 250), font=font)
+                count += 1
 
     #Draw events
     font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
