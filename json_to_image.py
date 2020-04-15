@@ -220,7 +220,7 @@ def json_to_image(data):
         color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
         start = datetime.datetime.strptime(i['inizio'], date_scheme)
         finish = datetime.datetime.strptime(i['fine'], date_scheme)
-        event_posX = (start - earliest).days
+        event_posX = (start.date() - earliest.date()).days
         event_posY = start.hour - h_earliest[0]
         event_end_posY = finish.hour - h_earliest[0]
         shape = [
