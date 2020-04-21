@@ -56,6 +56,9 @@ WEEK_DAY = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 date_scheme = '%Y-%m-%d %H:%M:%S'
 
 def json_to_image(data):
+    #Reset H_SPACING['top'] to default value
+    H_SPACING['top'] = H_SPACING['top-original']
+
     #Draw backgroud
     img = Image.new('RGB', (X, Y), color = (20, 20, 20))
     d = ImageDraw.Draw(img)
