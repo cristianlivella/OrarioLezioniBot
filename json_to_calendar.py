@@ -268,7 +268,11 @@ def json_to_calendar(data_calendar):
 
     drawCalendar(data);
 
-def json_to_calendar(data_calendar, start, end):
+def json_to_calendar_filtered(data_calendar, start, end):
+    #Create a copy of the original object
     data = data_calendar.copy()
+
+    #Reset H_SPACING['top'] to default value
+    H_SPACING['top'] = H_SPACING['top-original']
 
     drawCalendar(data);
