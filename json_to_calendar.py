@@ -101,23 +101,30 @@ def getOptimalTextWidth(text, font, Y):
 
 def filterMultipleDayEvents(json):
     multiple_day_events = []
+    temp = []
     font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
+    #get multiple day events
     for i in json:
         event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
         event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+        r = getDaysRange(json)
         if event_start.date() != event_end.date():
             #w, h = d.textsize(i['materia'], font=font)
-            H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
-            multiple_day_events.append(i)
-
-    for i in multiple_day_events:
+            temp.append(i)
+    #remove multiple day events from other events
+    for i in temp:
         for x in json:
             if i == x:
                 json.remove(x)
-
+    #save multiple day events present in the current calendar
+    for i in temp:
+        if event_end <= r[len(r) - 1] or (event_start >= r[0] and event_start <= r[len(r) - 1]):
+            multiple_day_events.append(i)
+            H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
+            print(H_SPACING['top'])
     return multiple_day_events
 
-def draw_calendar(data):
+def drawCalendar(data):
     #Draw backgroud
     img = Image.new('RGB', (X, Y), color = (20, 20, 20))
     d = ImageDraw.Draw(img)
@@ -184,7 +191,7 @@ def draw_calendar(data):
         for i in multiple_day_events:
             event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
             event_end = datetime.datetime.strptime(i['fine'], date_scheme)
-            if event_end <= r[len(r) - 1] or event_start >= r[0]:
+            if event_end <= r[len(r) - 1] or (event_start >= r[0] and event_start <= r[len(r) - 1]):
                 text = i['materia']
                 font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
                 w, h = d.textsize(text, font=font)
@@ -215,42 +222,42 @@ def draw_calendar(data):
                 d.text(position, text, fill=(250, 250, 250), font=font)
                 count += 1
 
-        #Draw events
-        font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
-        for i in data:
-            color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
-            start = datetime.datetime.strptime(i['inizio'], date_scheme)
-            finish = datetime.datetime.strptime(i['fine'], date_scheme)
-            event_posX = (start.date() - earliest.date()).days
-            event_posY = start.hour - h_earliest[0]
-            event_end_posY = finish.hour - h_earliest[0]
-            shape = [
-                (
-                    event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
-                    event_posY * h_spacing + H_SPACING['top'] + EVENT_PADDING
-                ),
-                (
-                    (event_posX + 1) * d_spacing + D_SPACING['left'] - EVENT_PADDING,
-                    event_end_posY * h_spacing + H_SPACING['top'] - EVENT_PADDING
-                )
-            ]
-            d.rounded_rectangle(shape, 10, fill = COLORS[i['materia']])
+    #Draw events
+    font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
+    for i in data:
+        color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
+        start = datetime.datetime.strptime(i['inizio'], date_scheme)
+        finish = datetime.datetime.strptime(i['fine'], date_scheme)
+        event_posX = (start.date() - earliest.date()).days
+        event_posY = start.hour - h_earliest[0]
+        event_end_posY = finish.hour - h_earliest[0]
+        shape = [
+            (
+                event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
+                event_posY * h_spacing + H_SPACING['top'] + EVENT_PADDING
+            ),
+            (
+                (event_posX + 1) * d_spacing + D_SPACING['left'] - EVENT_PADDING,
+                event_end_posY * h_spacing + H_SPACING['top'] - EVENT_PADDING
+            )
+        ]
+        d.rounded_rectangle(shape, 10, fill = COLORS[i['materia']])
 
-            text = i['materia']
-            y_text = 0
-            while(len(text) > 0):
-                wd = getOptimalTextWidth(text, font, d_spacing - EVENT_PADDING * 2 - TEXT_PADDING)
-                lines = textwrap.wrap(text, width=wd)
-                width, height = font.getsize(lines[0])
-                position = (
-                    event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING + TEXT_PADDING,
-                    event_posY * h_spacing + H_SPACING['top'] + EVENT_PADDING + TEXT_PADDING + y_text
-                )
-                d.text(position, lines[0], fill=(250, 250, 250), font=font)
-                text = text[len(lines[0]) + 1:]
-                y_text += height
+        text = i['materia']
+        y_text = 0
+        while(len(text) > 0):
+            wd = getOptimalTextWidth(text, font, d_spacing - EVENT_PADDING * 2 - TEXT_PADDING)
+            lines = textwrap.wrap(text, width=wd)
+            width, height = font.getsize(lines[0])
+            position = (
+                event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING + TEXT_PADDING,
+                event_posY * h_spacing + H_SPACING['top'] + EVENT_PADDING + TEXT_PADDING + y_text
+            )
+            d.text(position, lines[0], fill=(250, 250, 250), font=font)
+            text = text[len(lines[0]) + 1:]
+            y_text += height
 
-        img.save('image.png')
+    img.save('image.png')
 
 def json_to_calendar(data_calendar):
     #Create a copy of the original object
@@ -259,4 +266,9 @@ def json_to_calendar(data_calendar):
     #Reset H_SPACING['top'] to default value
     H_SPACING['top'] = H_SPACING['top-original']
 
-    draw_calendar(data);
+    drawCalendar(data);
+
+def json_to_calendar(data_calendar, start, end):
+    data = data_calendar.copy()
+
+    drawCalendar(data);
