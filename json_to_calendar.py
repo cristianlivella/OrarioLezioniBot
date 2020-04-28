@@ -99,6 +99,15 @@ def getOptimalTextWidth(text, font, Y):
         i += 1
     return i
 
+def filterEvents(json, start, end):
+    events = []
+    for i in json:
+        event_start = datetime.datetime.strptime(i['inizio'], date_scheme).date()
+        event_end = datetime.datetime.strptime(i['fine'], date_scheme).date()
+        if event_start >= start and event_end <= end:
+            events.append(i)
+    return events
+
 def filterMultipleDayEvents(json):
     multiple_day_events = []
     temp = []
@@ -121,10 +130,12 @@ def filterMultipleDayEvents(json):
         if event_end <= r[len(r) - 1] or (event_start >= r[0] and event_start <= r[len(r) - 1]):
             multiple_day_events.append(i)
             H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
-            print(H_SPACING['top'])
     return multiple_day_events
 
-def drawCalendar(data):
+def drawCalendar(data, start, end, verbose):
+    #Debug crap
+    if verbose: print('Drawing calendar starting from ' + str(start) + ' ending at ' + str(end))
+
     #Draw backgroud
     img = Image.new('RGB', (X, Y), color = (20, 20, 20))
     d = ImageDraw.Draw(img)
@@ -137,9 +148,10 @@ def drawCalendar(data):
         COLORS[i['materia']] = color
 
     multiple_day_events = filterMultipleDayEvents(data)
+    events = filterEvents(data, start, end)
 
     #Draw hours
-    h_earliest, h_latest, h_duration = getHoursRange(data)
+    h_earliest, h_latest, h_duration = getHoursRange(events)
     h_spacing = (Y - H_SPACING['top'] - H_SPACING['bottom']) / h_duration
     font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 20)
     for i in range(0, h_duration + 1):
@@ -160,8 +172,7 @@ def drawCalendar(data):
         d.line(shape, fill =(30, 30, 30), width = LINE_WIDTH)
 
     #Draw days
-    r = getDaysRange(data)
-    earliest, latest, d_duration = r[0], r[len(r) - 1], len(r)
+    earliest, latest, d_duration = start, end, (end - start).days + 1
     d_spacing = (X - D_SPACING['right'] - D_SPACING['left']) / d_duration
     font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 30)
     for i in range(0, d_duration):
@@ -171,13 +182,13 @@ def drawCalendar(data):
         d.ellipse((circle_posX + D_SPACING['left'], D_SPACING['top'] + text_center_offset, circle_posX + D_SPACING['left'] + CIRCLE_DIAMETER, D_SPACING['top'] + CIRCLE_DIAMETER + text_center_offset), fill = (40, 40, 40))
         #Draw day number
         font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 30)
-        text = str(r[i].day)
+        text = str((start + timedelta(days = i)).day)
         w, h = d.textsize(text, font=font)
         text_posX = d_spacing * i + (d_spacing - w) / 2
         d.text((text_posX + D_SPACING['left'], D_SPACING['top'] + DAYS_TEXT_SPACING['number']), text, fill=(230, 230, 230), font=font)
         #Draw day text
         font = ImageFont.truetype("fonts/BalooThambi2-Regular.ttf", 20)
-        text = WEEK_DAY[r[i].weekday()]
+        text = WEEK_DAY[(start + timedelta(days = i)).weekday()]
         w, h = d.textsize(text, font=font)
         text_posX = d_spacing * i + (d_spacing - w) / 2
         d.text((text_posX + D_SPACING['left'], D_SPACING['top'] + DAYS_TEXT_SPACING['text']), text, fill=(230, 230, 230), font=font)
@@ -189,21 +200,21 @@ def drawCalendar(data):
     if multiple_day_events:
         count = 0
         for i in multiple_day_events:
-            event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
-            event_end = datetime.datetime.strptime(i['fine'], date_scheme)
-            if event_end <= r[len(r) - 1] or (event_start >= r[0] and event_start <= r[len(r) - 1]):
+            event_start = datetime.datetime.strptime(i['inizio'], date_scheme).date()
+            event_end = datetime.datetime.strptime(i['fine'], date_scheme).date()
+            if event_end <= latest or (event_start >= earliest and event_start <= latest):
                 text = i['materia']
                 font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
                 w, h = d.textsize(text, font=font)
-                if (event_start.date() - earliest.date()).days < 0:
+                if (event_start - earliest).days < 0:
                     event_start_posX = 0
                 else:
-                    event_start_posX = (event_start.date() - earliest.date()).days
+                    event_start_posX = (event_start - earliest).days
 
-                if (event_end.date() - earliest.date()).days > len(r):
-                    event_end_posX = len(r)
+                if (event_end - earliest).days > d_duration:
+                    event_end_posX = d_duration
                 else:
-                    event_end_posX = (event_end.date() - earliest.date()).days
+                    event_end_posX = (event_end - earliest).days
                 shape = [
                     (
                         event_start_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
@@ -224,13 +235,13 @@ def drawCalendar(data):
 
     #Draw events
     font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
-    for i in data:
+    for i in events:
         color = (random.randint(0, 127), random.randint(0, 255), random.randint(0, 255))
-        start = datetime.datetime.strptime(i['inizio'], date_scheme)
-        finish = datetime.datetime.strptime(i['fine'], date_scheme)
-        event_posX = (start.date() - earliest.date()).days
-        event_posY = start.hour - h_earliest[0]
-        event_end_posY = finish.hour - h_earliest[0]
+        event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
+        event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+        event_posX = (event_start.date() - earliest).days
+        event_posY = event_start.hour - h_earliest[0]
+        event_end_posY = event_end.hour - h_earliest[0]
         shape = [
             (
                 event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
@@ -257,22 +268,23 @@ def drawCalendar(data):
             text = text[len(lines[0]) + 1:]
             y_text += height
 
-    img.save('image.png')
+    return img
 
-def json_to_calendar(data_calendar):
+def json_to_calendar(data_calendar, start=None, end=None, filename='image.png', verbose=False):
     #Create a copy of the original object
     data = data_calendar.copy()
 
     #Reset H_SPACING['top'] to default value
     H_SPACING['top'] = H_SPACING['top-original']
 
-    drawCalendar(data);
+    #Debug crap
+    if verbose: print('Saving calendar to ' + filename)
 
-def json_to_calendar_filtered(data_calendar, start, end):
-    #Create a copy of the original object
-    data = data_calendar.copy()
+    if not start and not end:
+        days_range = getDaysRange(data)
+        img = drawCalendar(data, days_range[0].date(), days_range[len(days_range) - 1].date(), verbose)
+    else:
+        img = drawCalendar(data, start.date(), end.date(), verbose);
 
-    #Reset H_SPACING['top'] to default value
-    H_SPACING['top'] = H_SPACING['top-original']
-
-    drawCalendar(data);
+    if verbose: print('Saving calendar to ' + filename)
+    img.save(filename)
