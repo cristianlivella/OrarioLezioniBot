@@ -1,5 +1,5 @@
 import requests, re, icalendar, recurring_ical_events, json, textwrap, PIL, threading, time, os, sys
-from whatsapp import WhatsApp
+#from whatsapp import WhatsApp
 from datetime import datetime, timedelta, date
 from dateutil.parser import parse
 from PIL import ImageFont
@@ -8,7 +8,7 @@ from PIL import ImageDraw
 from json_to_calendar import json_to_calendar
 
 # url del calendario: lo trovi nele impostazioni del calendario in Google Calendar, sotto la voce "Indirizzo segreto in formato iCal"
-CALENDAR_URL = ""
+CALENDAR_URL = "https://calendar.google.com/calendar/ical/25j1ubl9sub512r5f8kstu17bg%40group.calendar.google.com/private-b421aaabdac241e427e1b050a6046fa9/basic.ics"
 # nome della gruppo WhatsApp
 CHAT_NAME = ""
 
@@ -171,6 +171,11 @@ def run():
 
 if sys.version_info[0] < 3:
     raise Exception("Python 3 or a more recent version is required.")
+
+dates = getDates()
+lezioni = lezioniRange(dates[0], dates[1])
+json_to_calendar(lezioni)
+quit()
 
 lastMateria = ''
 lezioniCache = []
