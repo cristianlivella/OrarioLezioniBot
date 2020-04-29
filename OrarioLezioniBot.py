@@ -5,7 +5,7 @@ from dateutil.parser import parse
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-from json_to_image import json_to_image
+from json_to_calendar import json_to_calendar
 
 # url del calendario: lo trovi nele impostazioni del calendario in Google Calendar, sotto la voce "Indirizzo segreto in formato iCal"
 CALENDAR_URL = ""
@@ -103,7 +103,7 @@ def handleMessage():
                 elif message.lower() == "lezioni dopodomani" or message.lower() == "orario dopodomani":
                     sendMessage(lezioniDopoDomani(), False)
                 elif message.lower() == "cambia immagine" or message.lower() == "aggiorna immagine":
-                    json_to_image(lezioniCache)
+                    json_to_calendar(lezioniCache)
                     changePicture(False)
                 oldMessage = messages[0]
         except:
@@ -156,7 +156,7 @@ def run():
         f = open("orario.old", "w")
         f.write(json.dumps(lezioni))
         f.close()
-        json_to_image(lezioni)
+        json_to_calendar(lezioni)
         changePicture()
     today = date.today()
     todayy = (today.year, today.month, today.day)
