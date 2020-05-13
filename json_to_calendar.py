@@ -73,7 +73,7 @@ def getHoursRange(json):
     duration = delta.seconds / 3600
     return [earliest.hour, earliest.minute], [latest.hour, latest.minute], int(duration)
 
-def getDaysRange(json):
+def getEventsDays(json):
     r = []
     earliest = datetime.datetime.strptime(json[0]['inizio'], date_scheme)
     latest = datetime.datetime.strptime(json[len(json) - 1]['inizio'], date_scheme)
@@ -110,29 +110,22 @@ def filterEvents(json, start, end):
 
 def filterMultipleDayEvents(json):
     multiple_day_events = []
-    temp = []
     font = ImageFont.truetype("fonts/Lato-Bold.ttf", 20)
     #get multiple day events
     for i in json:
         event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
         event_end = datetime.datetime.strptime(i['fine'], date_scheme)
-        r = getDaysRange(json)
         if event_start.date() != event_end.date():
             #w, h = d.textsize(i['materia'], font=font)
-            temp.append(i)
+            multiple_day_events.append(i)
     #remove multiple day events from other events
-    for i in temp:
+    for i in multiple_day_events:
         for x in json:
             if i == x:
                 json.remove(x)
-    #save multiple day events present in the current calendar
-    for i in temp:
-        if event_end <= r[len(r) - 1] or (event_start >= r[0] and event_start <= r[len(r) - 1]):
-            multiple_day_events.append(i)
-            H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
     return multiple_day_events
 
-def drawCalendar(data, start, end, verbose):
+def drawCalendar(events, multiple_day_events, start, end, verbose):
     #Debug crap
     if verbose: print('Drawing calendar starting from ' + str(start) + ' ending at ' + str(end))
 
@@ -143,12 +136,12 @@ def drawCalendar(data, start, end, verbose):
     COLORS = {}
 
     #Assign color to every event(events with same name will get same color)
-    for i in data:
+    for i in events:
         color = (random.randint(0, 127), random.randint(0, 127), random.randint(0, 127))
         COLORS[i['materia']] = color
-
-    multiple_day_events = filterMultipleDayEvents(data)
-    events = filterEvents(data, start, end)
+    for i in multiple_day_events:
+        color = (random.randint(0, 127), random.randint(0, 127), random.randint(0, 127))
+        COLORS[i['materia']] = color
 
     #Draw hours
     h_earliest, h_latest, h_duration = getHoursRange(events)
@@ -267,24 +260,40 @@ def drawCalendar(data, start, end, verbose):
             d.text(position, lines[0], fill=(250, 250, 250), font=font)
             text = text[len(lines[0]) + 1:]
             y_text += height
-
     return img
 
 def json_to_calendar(data_calendar, start=None, end=None, filename='image.png', verbose=False):
     #Create a copy of the original object
-    data = data_calendar.copy()
+    events = data_calendar.copy()
 
     #Reset H_SPACING['top'] to default value
     H_SPACING['top'] = H_SPACING['top-original']
 
-    #Debug crap
-    if verbose: print('Saving calendar to ' + filename)
+    temp_multiple_day_events = filterMultipleDayEvents(events)
+    events_days = getEventsDays(events)
 
+    multiple_day_events=[]
+
+    #if data range is not specified
     if not start and not end:
-        days_range = getDaysRange(data)
-        img = drawCalendar(data, days_range[0].date(), days_range[len(days_range) - 1].date(), verbose)
-    else:
-        img = drawCalendar(data, start.date(), end.date(), verbose);
+        for i in temp_multiple_day_events:
+            event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
+            event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+            if event_end <= events_days[len(events_days) - 1] or (event_start >= events_days[0] and event_start <= events_days[len(events_days) - 1]):
+                multiple_day_events.append(i)
+                H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
+        img = drawCalendar(events, multiple_day_events, events_days[0].date(), events_days[len(events_days) - 1].date(), verbose)
 
+    #if data range is specified
+    else:
+        for i in temp_multiple_day_events:
+            event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
+            event_end = datetime.datetime.strptime(i['fine'], date_scheme)
+            if event_end <= end or (event_start >= start and event_start <= end):
+                multiple_day_events.append(i)
+                H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
+        img = drawCalendar(events, multiple_day_events, start.date(), end.date(), verbose);
+
+    #Debug crap
     if verbose: print('Saving calendar to ' + filename)
     img.save(filename)
