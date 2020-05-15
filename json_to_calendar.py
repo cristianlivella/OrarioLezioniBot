@@ -56,22 +56,16 @@ WEEK_DAY = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 date_scheme = '%Y-%m-%d %H:%M:%S'
 
 def getHoursRange(json):
-    earliest = datetime.datetime.strptime(json[0]['inizio'], date_scheme)
-    latest = datetime.datetime.strptime(json[0]['fine'], date_scheme)
+    earliest = datetime.datetime.strptime(json[0]['inizio'], date_scheme).time()
+    latest = datetime.datetime.strptime(json[0]['fine'], date_scheme).time()
     for i in json:
-        i_date = datetime.datetime.strptime(i['inizio'], date_scheme)
-        if i_date.hour < earliest.hour:
+        i_date = datetime.datetime.strptime(i['inizio'], date_scheme).time()
+        if i_date < earliest:
             earliest = i_date
-        elif i_date.hour == earliest.hour and i_date.minute < earliest.minute:
-            earliest = i_date
-        i_date = datetime.datetime.strptime(i['fine'], date_scheme)
-        if i_date.hour > latest.hour:
+        i_date = datetime.datetime.strptime(i['fine'], date_scheme).time()
+        if i_date > latest:
             latest = i_date
-        elif i_date.hour == latest.hour and i_date.minute > latest.minute:
-            latest = i_date
-    delta = latest - earliest
-    duration = delta.seconds / 3600
-    return [earliest.hour, earliest.minute], [latest.hour, latest.minute], int(duration)
+    return earliest, latest
 
 def getEventsDays(json):
     r = []
@@ -144,11 +138,14 @@ def drawCalendar(events, multiple_day_events, start, end, verbose):
         COLORS[i['materia']] = color
 
     #Draw hours
-    h_earliest, h_latest, h_duration = getHoursRange(events)
-    h_spacing = (Y - H_SPACING['top'] - H_SPACING['bottom']) / h_duration
+    h_earliest_in, h_latest_in = getHoursRange(events)
+    h_earliest = timedelta(hours = h_earliest_in.hour, minutes = h_earliest_in.minute, seconds = h_earliest_in.second)
+    h_latest = timedelta(hours = h_latest_in.hour, minutes = h_latest_in.minute, seconds = h_latest_in.second)
+    h_duration = h_latest- h_earliest
+    h_spacing = (Y - H_SPACING['top'] - H_SPACING['bottom']) / (h_duration.seconds / 3600)
     font = ImageFont.truetype("fonts/Baloo2-Bold.ttf", 20)
-    for i in range(0, h_duration + 1):
-        w, h = d.textsize(str(h_earliest[0] + i) + ':00', font=font)
+    for i in range(0, h_duration.seconds // 3600 + 1):
+        w, h = d.textsize(str((h_earliest + timedelta(hours = i)).seconds // 3600) + ':00', font=font)
         shape = [
             (
                 HOURS_TEXT_MARGIN['left'] - HOURS_RECT_PADDING['left'],
@@ -160,7 +157,7 @@ def drawCalendar(events, multiple_day_events, start, end, verbose):
             )
         ]
         d.rounded_rectangle(shape, 5, fill = (40, 40, 40))
-        d.text((HOURS_TEXT_MARGIN['left'], i * h_spacing + H_SPACING['top'] + HOURS_TEXT_MARGIN['top']), str(h_earliest[0] + i) + ':00', fill=(230, 230, 230), font=font)
+        d.text((HOURS_TEXT_MARGIN['left'], i * h_spacing + H_SPACING['top'] + HOURS_TEXT_MARGIN['top']), str((h_earliest + timedelta(hours = i)).seconds // 3600) + ':00', fill=(230, 230, 230), font=font)
         shape = [(H_SPACING['left'], i * h_spacing + H_SPACING['top']), (X - H_SPACING['right'], i * h_spacing + H_SPACING['top'])]
         d.line(shape, fill =(30, 30, 30), width = LINE_WIDTH)
 
@@ -233,8 +230,8 @@ def drawCalendar(events, multiple_day_events, start, end, verbose):
         event_start = datetime.datetime.strptime(i['inizio'], date_scheme)
         event_end = datetime.datetime.strptime(i['fine'], date_scheme)
         event_posX = (event_start.date() - earliest).days
-        event_posY = event_start.hour - h_earliest[0]
-        event_end_posY = event_end.hour - h_earliest[0]
+        event_posY = (event_start - h_earliest).hour + (event_start - h_earliest).minute / 60 + (event_start - h_earliest).second / 3600
+        event_end_posY = (event_end - h_earliest).hour + (event_end - h_earliest).minute / 60 + (event_end - h_earliest).second / 3600
         shape = [
             (
                 event_posX * d_spacing + D_SPACING['left'] + EVENT_PADDING,
