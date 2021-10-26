@@ -5,6 +5,8 @@ from datetime import timedelta
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
 import rounded_rectangle
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 X, Y = 1000, 1000
 
@@ -120,8 +122,7 @@ def filterMultipleDayEvents(json):
     return multiple_day_events
 
 def drawCalendar(events, multiple_day_events, start, end, verbose):
-    #Debug crap
-    if verbose: print('Drawing calendar starting from ' + str(start) + ' ending at ' + str(end))
+    if verbose: logger.info('Drawing calendar starting from ' + str(start) + ' ending at ' + str(end))
 
     #Draw backgroud
     img = Image.new('RGB', (X, Y), color = (20, 20, 20))
@@ -291,6 +292,5 @@ def json_to_calendar(data_calendar, start=None, end=None, filename='image.png', 
                 H_SPACING['top'] += MULTIPLE_DAY_EVENTS_HEIGHT
         img = drawCalendar(events, multiple_day_events, start.date(), end.date(), verbose);
 
-    #Debug crap
-    if verbose: print('Saving calendar to ' + filename)
+    if verbose: logger.info('Saving calendar to ' + filename)
     img.save(filename)
